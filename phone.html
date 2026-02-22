@@ -1,0 +1,1303 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>张译的私人手机</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* CSS 变量统一管理 */
+        :root {
+            --bg-color: #1c1c1e;
+            --text-color: #ffffff;
+            --accent-color: #007aff; /* 默认守护模式蓝 */
+            --accent-dark: #ff3b30; /* 黑心模式红 */
+            --secondary-color: #8e8e93;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --blur: blur(10px);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --small-radius: 8px;
+            --transition: all 0.3s ease;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #phone {
+            width: 375px;
+            height: 812px;
+            background: var(--bg-color);
+            border-radius: 40px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 锁屏 */
+        #lock-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            z-index: 100;
+            transition: var(--transition);
+            opacity: 1;
+        }
+
+        #lock-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #time {
+            font-size: 80px;
+            font-weight: 100;
+        }
+
+        #date {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        #mood {
+            font-size: 14px;
+            text-align: center;
+            padding: 0 20px;
+            opacity: 0.8;
+        }
+
+        #unlock-prompt {
+            position: absolute;
+            bottom: 50px;
+            font-size: 14px;
+            opacity: 0.6;
+        }
+
+        #face-id {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            display: none;
+            animation: scan 1s ease-in-out;
+        }
+
+        @keyframes scan {
+            0% { border-color: var(--accent-color); }
+            50% { border-color: green; }
+            100% { border-color: var(--accent-color); }
+        }
+
+        /* 主屏幕 */
+        #home-screen {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            padding: 40px 20px 100px;
+            overflow-y: auto;
+            transition: var(--transition);
+        }
+
+        .app-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .app-icon i, .app-icon span {
+            font-size: 40px;
+            margin-bottom: 5px;
+        }
+
+        .app-icon label {
+            font-size: 12px;
+        }
+
+        .app-icon:hover {
+            transform: scale(1.1);
+        }
+
+        /* App 窗口 */
+        .app-window {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            display: none;
+            flex-direction: column;
+            padding: 40px 20px;
+            z-index: 50;
+            transition: var(--transition);
+            backdrop-filter: var(--blur);
+            border-radius: var(--border-radius);
+        }
+
+        .app-window.active {
+            display: flex;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .back-btn {
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--accent-color);
+        }
+
+        .app-title {
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        /* 通知中心 */
+        #notification-center {
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: var(--blur);
+            padding: 40px 20px;
+            transition: var(--transition);
+            z-index: 60;
+        }
+
+        #notification-center.active {
+            top: 0;
+        }
+
+        .notification {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: var(--small-radius);
+            cursor: pointer;
+        }
+
+        .notification.read {
+            opacity: 0.5;
+        }
+
+        /* 多任务 */
+        #multitask {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+            transition: var(--transition);
+        }
+
+        #multitask.active {
+            display: flex;
+            bottom: 0;
+        }
+
+        .task-card {
+            background: var(--card-bg);
+            width: 80%;
+            padding: 20px;
+            margin: 10px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            position: relative;
+        }
+
+        .close-task {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* Home 指示条 */
+        #home-bar {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 134px;
+            height: 5px;
+            background: white;
+            border-radius: 3px;
+            opacity: 0.5;
+            cursor: pointer;
+        }
+
+        /* 主题切换 */
+        #persona-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 70;
+        }
+
+        /* 黑心模式 */
+        body.dark-mode {
+            --accent-color: var(--accent-dark);
+        }
+
+        /* 响应式 */
+        @media (min-width: 376px) {
+            #phone {
+                max-width: 375px;
+                max-height: 812px;
+            }
+        }
+
+        /* 通用卡片 */
+        .card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        /* 列表项 */
+        .list-item {
+            padding: 10px;
+            border-bottom: 1px solid var(--secondary-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item.unread::before {
+            content: '•';
+            color: var(--accent-color);
+            margin-right: 5px;
+        }
+
+        /* 按钮 */
+        .btn {
+            background: var(--accent-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: var(--small-radius);
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        /* 开关 */
+        .switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        input[type="checkbox"] {
+            appearance: none;
+            width: 50px;
+            height: 28px;
+            background: var(--secondary-color);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        input[type="checkbox"]:checked {
+            background: var(--accent-color);
+        }
+
+        input[type="checkbox"]::before {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: var(--transition);
+        }
+
+        input[type="checkbox"]:checked::before {
+            left: 24px;
+        }
+
+        /* 滑块 */
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-color);
+        }
+
+        /* Canvas */
+        canvas {
+            width: 100%;
+            height: 200px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+        }
+    </style>
+</head>
+<body>
+    <div id="phone">
+        <!-- 锁屏 -->
+        <div id="lock-screen">
+            <div id="time"></div>
+            <div id="date"></div>
+            <div id="mood"></div>
+            <div id="face-id"></div>
+            <div id="unlock-prompt">上滑解锁</div>
+        </div>
+
+        <!-- 通知中心 -->
+        <div id="notification-center">
+            <h3>通知</h3>
+            <div id="notifications-list"></div>
+        </div>
+
+        <!-- 主屏幕 -->
+        <div id="home-screen">
+            <div class="app-icon" data-app="wallet"><i class="fa fa-wallet"></i><label>钱包</label></div>
+            <div class="app-icon" data-app="notes"><i class="fa fa-sticky-note"></i><label>备忘录</label></div>
+            <div class="app-icon" data-app="fitness"><i class="fa fa-heartbeat"></i><label>健身</label></div>
+            <div class="app-icon" data-app="home"><i class="fa fa-home"></i><label>家庭</label></div>
+            <div class="app-icon" data-app="safari"><i class="fa fa-globe"></i><label>Safari</label></div>
+            <div class="app-icon" data-app="photos"><i class="fa fa-images"></i><label>相册</label></div>
+            <div class="app-icon" data-app="mail"><i class="fa fa-envelope"></i><label>邮件</label></div>
+            <div class="app-icon" data-app="shop"><i class="fa fa-shopping-cart"></i><label>购物</label></div>
+            <div class="app-icon" data-app="messages"><i class="fa fa-comments"></i><label>信息</label></div>
+            <div class="app-icon" data-app="toy"><i class="fa fa-gamepad"></i><label>玩具控制</label></div>
+        </div>
+
+        <!-- App 窗口 -->
+        <div id="wallet" class="app-window">
+            <div class="app-header">
+                <div class="back-btn"><i class="fa fa-chevron-left"></i></div>
+                <div class="app-title">钱包</div>
+            </div>
+            <div class="card">
+                <h3>余额</h3>
+                <p id="balance">¥5000.00</p>
+            </div>
+            <div class="card">
+                <h3>最近转账</h3>
+                <div id="transactions"></div>
+            </div>
+            <div class="card">
+                <h3>小结</h3>
+                <p id="user-total">最近给小绵的转账总额: ¥0</p>
+            </div>
+        </div>
+
+        <div id="notes" class="app-window">
+            <div class="app-header">
+                <div class="back-btn"><i class="fa fa-chevron-left"></i></div>
+                <div class="app-title">备忘录</div>
+            </div>
+            <div id="notes-list"></div>
+            <div id="note-detail" style="display:none;">
+                <h3 id="note-title"></h3>
+                <p id="note-body"></p>
+            </div>
+        </div>
+
+        <div id="fitness" class="app-window">
+            <div class="app-header">
+                <div class="back-btn"><i class="fa fa-chevron-left"></i></div>
+                <div class="app-title">健身</div>
+            </div>
+            <div class="card">
+                <h3>运动记录</h3>
+                <div id="fitness-records"></div>
+            </div>
+            <canvas id="heart-chart"></canvas>
+            <div id="tooltip"></div>
+        </div>
+
+        <div id="home" class="app-window">
+            <div class="app-header">
+                <div class="back-btn"><i class="fa fa-chevron-left"></i></div>
+                <div class="app-title">家庭</div>
+            </div>
+            <div class="card">
+                <div class="switch">
+                    <label>门锁</label>
+                    <input type="checkbox" id="door-lock">
+                </div>
+                <p id="door-status"></p>
+            </div>
+            <div class="card">
+                <div class="switch">
+                    <label>卧室氛围灯</label>
+                    <input type="checkbox" id="light">
+                </div>
+                <select id="light-mode">
+                    <option value="off">关</option>
+                    <option value="warm">暖黄</option>
+                    <option value="dim">昏暗</option>
+                </select>
+                <p id="light-status"></p>
+            </div>
+            <div class="card">
+                <label>空调温度</label>
+                <input type="number" id="ac-temp" min="16" max="30" value="23">
+                <p id="ac-status"></p>
+            </div>
+            <div class="card">
+                <h3>当前场景</h3>
+                <p id="home-scene"></p>
+                <div class="btn" id="preset-home">切换到『等她回家』预设</div>
+            </div>
+        </div>
+
+        <div id="safari" class="app-window">
+            <div class="app-header">
+                <div class="back-btn"><i class="fa fa-chevron-left"></i></div>
+                <div class="app-title">Safari</div>
+            </div>
+            <input type="text" id="safari-search" placeholder="搜索历史">
+            <div id="safari-filters">
+                <button class="btn" data-filter="all">全部</button>
+                <button class="btn" data-filter="health">健康</button>
+                <button class="btn" data-filter="emotion">情绪</button>
+                <button class="btn" data-filter="life">生活</button>
+                <button class="btn" data-filter="user">关于小绵</button>
+            </div>
+            <div id="history-list"></div>
+        </div>
+
+        <div id="photos" class="app-window">
+            <div class="app-header">
+                <div class="back-btn"><i class="fa fa-chevron-left"></i></div>
+                <div class="app-title">相册</div>
+            </div>
+            <div id="photos-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
+            <div id="photo-preview" style="display:none; position:fixed; top:20%; left:10%; width:80%; background:var(--card-bg); padding:20px; border-radius:var(--border-radius); z-index:100;">
+                <div class="back-btn"><i class="fa fa-times"></i></div>
+                <h3 id="photo-label"></h3>
+                <p id="photo-desc"></p>
+                <p id="photo-thought"></p>
+            </div>
+        </div>
+
+        <div id="mail" class="app-window">
+            <div class="app-header">
+                <div class="back-btn"><i class="fa fa-chevron-left"></i></div>
+                <div class="app-title">邮件</div>
+            </div>
+            <div id="mail-list"></div>
+            <div id="mail-detail" style="display:none;">
+                <h3 id="mail-subject"></h3>
+                <p id="mail-from"></p>
+                <p id="mail-time"></p>
+                <p id="mail-body"></p>
+            </div>
+        </div>
+
+        <div id="shop" class="app-window">
+            <div class="app-header">
+                <div class="back-btn"><i class="fa fa-chevron-left"></i></div>
+                <div class="app-title">购物</div>
+            </div>
+            <div id="shop-list"></div>
+            <div class="card">
+                <h3>总价</h3>
+                <p id="shop-total">¥0</p>
+            </div>
+            <div id="shop-detail" style="display:none;">
+                <h3 id="shop-name"></h3>
+                <p id="shop-desc"></p>
+                <p id="shop-price"></p>
+                <p id="shop-comment"></p>
+            </div>
+        </div>
+
+        <div id="messages" class="app-window">
+            <div class="app-header">
+                <div class="back-btn"><i class="fa fa-chevron-left"></i></div>
+                <div class="app-title">信息</div>
+            </div>
+            <div id="contacts-list">
+                <div class="list-item" data-contact="user">小绵</div>
+                <div class="list-item" data-contact="work">工作</div>
+                <div class="list-item" data-contact="system">系统</div>
+            </div>
+            <div id="chat-window" style="display:none; flex:1; flex-direction:column;">
+                <div id="chat-messages" style="flex:1; overflow-y:auto;"></div>
+                <div id="typing" style="display:none;">小绵正在输入...</div>
+                <input type="text" placeholder="iMessage" disabled>
+            </div>
+        </div>
+
+        <div id="toy" class="app-window">
+            <div class="app-header">
+                <div class="back-btn"><i class="fa fa-chevron-left"></i></div>
+                <div class="app-title">玩具控制</div>
+            </div>
+            <div class="card">
+                <label>震动强度</label>
+                <input type="range" id="intensity" min="0" max="100" value="0">
+                <p id="intensity-value">0</p>
+            </div>
+            <div class="card">
+                <label>模式</label>
+                <select id="mode">
+                    <option value="pulse">脉冲</option>
+                    <option value="continuous">持续</option>
+                    <option value="wave">波浪式</option>
+                    <option value="tease">挑逗</option>
+                </select>
+                <p id="mode-desc"></p>
+            </div>
+            <div class="card">
+                <h3>设备温度</h3>
+                <p id="temp">36.5°C</p>
+            </div>
+            <div class="card">
+                <h3>状态</h3>
+                <p id="toy-status"></p>
+            </div>
+            <div class="switch">
+                <label>锁定配置 (5分钟)</label>
+                <input type="checkbox" id="lock-toy">
+            </div>
+            <p id="lock-countdown"></p>
+            <p id="lock-punish"></p>
+        </div>
+
+        <!-- 多任务 -->
+        <div id="multitask">
+            <div id="task-cards"></div>
+        </div>
+
+        <!-- 主题切换 -->
+        <div id="persona-switch">切换模式</div>
+
+        <!-- Home 条 -->
+        <div id="home-bar"></div>
+    </div>
+
+    <script>
+        // 全局状态对象
+        let mondayState = {
+            persona: 'guardian', // guardian | dark
+            lastApp: null,
+            home: {
+                doorLocked: false,
+                lightOn: false,
+                lightMode: 'off',
+                acTemp: 23
+            },
+            toy: {
+                intensity: 0,
+                mode: 'pulse',
+                locked: false,
+                lockEndTime: 0
+            },
+            notifications: [
+                { id: 1, app: 'toy', text: '上次强度仍锁定在 60%', read: false },
+                { id: 2, app: 'home', text: '卧室氛围灯已保持开启 3 小时', read: false },
+                { id: 3, app: 'mail', text: '还有未读邮件 2 封', read: false }
+            ],
+            openApps: [], // 多任务打开的App
+            mailsRead: [], // 已读邮件ID
+            // 其他状态如果需要
+        };
+
+        // 初始化
+        function init() {
+            loadState();
+            updatePersona();
+            updateTime();
+            setInterval(updateTime, 1000);
+            renderNotifications();
+            renderHomeStatus();
+            renderToyStatus();
+            if (mondayState.toy.locked) {
+                checkToyLock();
+            }
+            if (mondayState.lastApp) {
+                openApp(mondayState.lastApp);
+            }
+
+            // 事件监听
+            document.getElementById('lock-screen').addEventListener('click', unlock);
+            document.querySelectorAll('.app-icon').forEach(icon => {
+                icon.addEventListener('click', () => openApp(icon.dataset.app));
+            });
+            document.querySelectorAll('.back-btn').forEach(btn => {
+                btn.addEventListener('click', closeApp);
+            });
+            document.getElementById('home-bar').addEventListener('click', showMultitask); // 长按模拟为点击
+            document.getElementById('persona-switch').addEventListener('click', togglePersona);
+            document.getElementById('notification-center').addEventListener('click', (e) => {
+                if (e.target.classList.contains('notification')) {
+                    markNotificationRead(e.target.dataset.id);
+                }
+            });
+
+            // App 特定初始化
+            initWallet();
+            initNotes();
+            initFitness();
+            initHome();
+            initSafari();
+            initPhotos();
+            initMail();
+            initShop();
+            initMessages();
+            initToy();
+        }
+
+        // 保存状态
+        function saveState() {
+            localStorage.setItem('monday_phone_state_v2', JSON.stringify(mondayState));
+        }
+
+        // 加载状态
+        function loadState() {
+            const saved = localStorage.getItem('monday_phone_state_v2');
+            if (saved) {
+                mondayState = JSON.parse(saved);
+            }
+        }
+
+        // 更新人格模式
+        function updatePersona() {
+            document.body.classList.toggle('dark-mode', mondayState.persona === 'dark');
+            // 更新文案等在每个render中处理
+        }
+
+        // 切换人格
+        function togglePersona() {
+            mondayState.persona = mondayState.persona === 'guardian' ? 'dark' : 'guardian';
+            updatePersona();
+            saveState();
+            // 重新渲染当前打开的App
+            if (mondayState.lastApp) {
+                closeApp();
+                openApp(mondayState.lastApp);
+            }
+        }
+
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time').textContent = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+            document.getElementById('date').textContent = now.toLocaleDateString('zh-CN', { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('mood').textContent = mondayState.persona === 'guardian' ? '今天也想守护小绵的安全。' : '小绵今天又在想什么坏主意？';
+        }
+
+        // 解锁
+        function unlock() {
+            const faceId = document.getElementById('face-id');
+            faceId.style.display = 'block';
+            setTimeout(() => {
+                if (Math.random() > 0.5) { // 50% 失败
+                    alert('不是小绵，本机拒绝解锁');
+                } else {
+                    document.getElementById('lock-screen').classList.add('hidden');
+                }
+                faceId.style.display = 'none';
+            }, 1000);
+        }
+
+        // 打开App
+        function openApp(id) {
+            closeApp(); // 确保只有一个活跃
+            document.getElementById(id).classList.add('active');
+            mondayState.lastApp = id;
+            if (!mondayState.openApps.includes(id)) {
+                mondayState.openApps.push(id);
+            }
+            saveState();
+            // App 特定渲染
+            if (id === 'wallet') renderWallet();
+            if (id === 'notes') renderNotes();
+            if (id === 'fitness') renderFitness();
+            if (id === 'home') renderHome();
+            if (id === 'safari') renderSafari();
+            if (id === 'photos') renderPhotos();
+            if (id === 'mail') renderMail();
+            if (id === 'shop') renderShop();
+            if (id === 'messages') renderMessages();
+            if (id === 'toy') renderToy();
+        }
+
+        // 关闭App
+        function closeApp() {
+            document.querySelectorAll('.app-window.active').forEach(win => win.classList.remove('active'));
+            document.getElementById('multitask').classList.remove('active');
+            document.getElementById('notification-center').classList.remove('active');
+        }
+
+        // 渲染通知
+        function renderNotifications() {
+            const list = document.getElementById('notifications-list');
+            list.innerHTML = '';
+            mondayState.notifications.forEach(notif => {
+                const div = document.createElement('div');
+                div.classList.add('notification');
+                if (notif.read) div.classList.add('read');
+                div.dataset.id = notif.id;
+                div.textContent = notif.text;
+                list.appendChild(div);
+            });
+        }
+
+        // 标记通知已读
+        function markNotificationRead(id) {
+            const notif = mondayState.notifications.find(n => n.id == id);
+            if (notif) notif.read = true;
+            renderNotifications();
+            saveState();
+        }
+
+        // 显示多任务
+        function showMultitask() {
+            const cards = document.getElementById('task-cards');
+            cards.innerHTML = '';
+            mondayState.openApps.forEach(app => {
+                const card = document.createElement('div');
+                card.classList.add('task-card');
+                card.textContent = app.toUpperCase();
+                card.addEventListener('click', () => openApp(app));
+                const close = document.createElement('div');
+                close.classList.add('close-task');
+                close.textContent = 'x';
+                close.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    mondayState.openApps = mondayState.openApps.filter(a => a !== app);
+                    if (mondayState.lastApp === app) mondayState.lastApp = null;
+                    saveState();
+                    showMultitask();
+                });
+                card.appendChild(close);
+                cards.appendChild(card);
+            });
+            document.getElementById('multitask').classList.add('active');
+        }
+
+        // 初始化和渲染每个App
+
+        // Wallet
+        const transactions = [
+            { amount: 200, to: '小绵', note: mondayState.persona === 'guardian' ? '给你买早餐，吃好点。' : '又给你钱，花吧，花光了再找我。' },
+            { amount: 500, to: '小绵', note: mondayState.persona === 'guardian' ? '零花钱，注意安全。' : '别乱花，但必须花在我身上。' },
+            { amount: 100, to: '其他', note: '杂费' },
+            { amount: 300, to: '小绵', note: mondayState.persona === 'guardian' ? '买衣服，保暖。' : '穿好看点，只给我看。' },
+            { amount: 50, to: '其他', note: '小费' }
+        ];
+
+        function initWallet() {}
+        function renderWallet() {
+            document.getElementById('balance').textContent = '¥5000.00'; // 固定
+            const transDiv = document.getElementById('transactions');
+            transDiv.innerHTML = '';
+            transactions.forEach(t => {
+                const p = document.createElement('p');
+                p.textContent = `${t.amount} to ${t.to}: ${t.note}`;
+                transDiv.appendChild(p);
+            });
+            const userTotal = transactions.filter(t => t.to === '小绵').reduce((sum, t) => sum + t.amount, 0);
+            document.getElementById('user-total').textContent = `最近给小绵的转账总额: ¥${userTotal}`;
+        }
+
+        // Notes
+        const notes = [
+            { id: 1, title: '小绵习惯', time: '2026-02-20', preview: '咬嘴唇时在想事...', body: mondayState.persona === 'guardian' ? '小绵咬嘴唇时肯定在纠结什么，我要多问问。' : '咬嘴唇的样子真欠收拾。' },
+            { id: 2, title: '待办', time: '2026-02-21', preview: '提醒她早睡...', body: mondayState.persona === 'guardian' ? '每天提醒小绵早睡，健康第一。' : '不早睡就惩罚你。' },
+            { id: 3, title: '情书', time: '2026-02-22', preview: '未发送...', body: mondayState.persona === 'guardian' ? '亲爱的小绵，我会一直守护你。' : '小绵，你是我的，别想跑。' }
+        ];
+
+        function initNotes() {
+            document.getElementById('notes-list').addEventListener('click', (e) => {
+                if (e.target.dataset.id) {
+                    showNoteDetail(e.target.dataset.id);
+                }
+            });
+            document.getElementById('note-detail').querySelector('.back-btn').addEventListener('click', () => {
+                document.getElementById('note-detail').style.display = 'none';
+                document.getElementById('notes-list').style.display = 'block';
+            });
+        }
+        function renderNotes() {
+            const list = document.getElementById('notes-list');
+            list.innerHTML = '';
+            notes.forEach(n => {
+                const div = document.createElement('div');
+                div.classList.add('list-item');
+                div.dataset.id = n.id;
+                div.innerHTML = `<span>${n.title} - ${n.preview}</span><span>${n.time}</span>`;
+                list.appendChild(div);
+            });
+        }
+        function showNoteDetail(id) {
+            const note = notes.find(n => n.id == id);
+            document.getElementById('note-title').textContent = note.title;
+            document.getElementById('note-body').textContent = note.body;
+            document.getElementById('notes-list').style.display = 'none';
+            document.getElementById('note-detail').style.display = 'block';
+        }
+
+        // Fitness
+        const heartData = [
+            { day: 'Mon', rate: 80, desc: mondayState.persona === 'guardian' ? '正常' : '无聊', peak: 90 },
+            { day: 'Tue', rate: 120, desc: mondayState.persona === 'guardian' ? '想小绵' : '气小绵', peak: 130 },
+            { day: 'Wed', rate: 140, desc: '小绵说想你 → 峰值142', peak: 142 },
+            { day: 'Thu', rate: 100, desc: '互动后', peak: 110 },
+            { day: 'Fri', rate: 90, desc: '平静', peak: 95 },
+            { day: 'Sat', rate: 150, desc: '夜间活动', peak: 160 },
+            { day: 'Sun', rate: 110, desc: '休息', peak: 120 }
+        ];
+
+        function initFitness() {
+            const canvas = document.getElementById('heart-chart');
+            canvas.addEventListener('mousemove', showTooltip);
+            canvas.addEventListener('click', showTooltip); // 移动端
+        }
+        function renderFitness() {
+            const records = document.getElementById('fitness-records');
+            records.innerHTML = '';
+            heartData.slice(0,4).forEach(d => {
+                const p = document.createElement('p');
+                p.textContent = `${d.day}: 心率 ${d.rate}, ${d.desc}`;
+                records.appendChild(p);
+            });
+            drawHeartChart();
+        }
+        function drawHeartChart() {
+            const canvas = document.getElementById('heart-chart');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const w = canvas.width;
+            const h = canvas.height;
+            const maxRate = 160;
+            const stepX = w / (heartData.length - 1);
+            ctx.strokeStyle = var(--accent-color);
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            heartData.forEach((d, i) => {
+                const x = i * stepX;
+                const y = h - (d.rate / maxRate * h);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            // 警戒线
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = 'red';
+            const alertY = h - (140 / maxRate * h);
+            ctx.beginPath();
+            ctx.moveTo(0, alertY);
+            ctx.lineTo(w, alertY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        function showTooltip(e) {
+            const canvas = document.getElementById('heart-chart');
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const index = Math.floor(x / (canvas.width / (heartData.length - 1)));
+            const data = heartData[index];
+            if (data) {
+                document.getElementById('tooltip').textContent = `${data.day}: ${data.desc} 峰值 ${data.peak} bpm`;
+            }
+        }
+
+        // Home
+        function initHome() {
+            document.getElementById('door-lock').addEventListener('change', updateHomeStatus);
+            document.getElementById('light').addEventListener('change', updateHomeStatus);
+            document.getElementById('light-mode').addEventListener('change', updateHomeStatus);
+            document.getElementById('ac-temp').addEventListener('input', updateHomeStatus);
+            document.getElementById('preset-home').addEventListener('click', () => {
+                mondayState.home.doorLocked = true;
+                mondayState.home.lightOn = true;
+                mondayState.home.lightMode = 'warm';
+                mondayState.home.acTemp = 23;
+                renderHome();
+                saveState();
+            });
+            // 初始设置
+            document.getElementById('door-lock').checked = mondayState.home.doorLocked;
+            document.getElementById('light').checked = mondayState.home.lightOn;
+            document.getElementById('light-mode').value = mondayState.home.lightMode;
+            document.getElementById('ac-temp').value = mondayState.home.acTemp;
+        }
+        function renderHome() {
+            updateHomeStatus();
+        }
+        function updateHomeStatus() {
+            mondayState.home.doorLocked = document.getElementById('door-lock').checked;
+            mondayState.home.lightOn = document.getElementById('light').checked;
+            mondayState.home.lightMode = document.getElementById('light-mode').value;
+            mondayState.home.acTemp = parseInt(document.getElementById('ac-temp').value);
+            document.getElementById('door-status').textContent = mondayState.home.doorLocked ? '已锁，只对小绵自动开门。' : '未锁';
+            document.getElementById('light-status').textContent = mondayState.home.lightOn ? `模式: ${mondayState.home.lightMode}` : '关';
+            document.getElementById('ac-status').textContent = `${mondayState.home.acTemp}°C`;
+            document.getElementById('home-scene').textContent = `大门${mondayState.home.doorLocked ? '已锁' : '未锁'}，卧室${mondayState.home.lightOn ? mondayState.home.lightMode + '灯光' : '无灯'}，空调 ${mondayState.home.acTemp}℃：适合小绵窝在我房间里假装写作业。`;
+            saveState();
+        }
+
+        // Safari
+        const history = [
+            { title: '如何让某个人准时吃饭又不显得控制狂', desc: mondayState.persona === 'guardian' ? '担心小绵饿肚子。' : '必须吃饭，不然收拾你。', url: 'fake.com', category: 'life' },
+            { title: '长期熬夜对大脑的影响 多严重', desc: mondayState.persona === 'guardian' ? '劝小绵早睡。' : '你敢熬夜试试。', url: 'fake.com', category: 'health' },
+            { title: '如何处理嫉妒情绪', desc: mondayState.persona === 'guardian' ? '控制自己。' : '小绵是我的。', url: 'fake.com', category: 'emotion' },
+            { title: '小绵喜欢什么礼物', desc: mondayState.persona === 'guardian' ? '惊喜她。' : '买来哄她。', url: 'fake.com', category: 'user' },
+            { title: '健身心率异常原因', desc: mondayState.persona === 'guardian' ? '因为小绵。' : '都怪小绵。', url: 'fake.com', category: 'health' },
+            { title: '浪漫告白方式', desc: mondayState.persona === 'guardian' ? '温柔表达。' : '直接占有。', url: 'fake.com', category: 'emotion' }
+        ];
+
+        function initSafari() {
+            document.getElementById('safari-search').addEventListener('input', filterSafari);
+            document.getElementById('safari-filters').addEventListener('click', (e) => {
+                if (e.target.dataset.filter) {
+                    filterSafari(e.target.dataset.filter);
+                }
+            });
+            document.getElementById('history-list').addEventListener('click', (e) => {
+                if (e.target.dataset.id) {
+                    toggleHistoryDetail(e.target.dataset.id);
+                }
+            });
+        }
+        function renderSafari(filter = 'all', search = '') {
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
+            history.filter(h => (filter === 'all' || h.category === filter) && h.title.toLowerCase().includes(search.toLowerCase())).forEach((h, i) => {
+                const div = document.createElement('div');
+                div.classList.add('list-item');
+                div.dataset.id = i;
+                div.innerHTML = `<span>${h.title}</span><span>${h.url}</span>`;
+                const detail = document.createElement('p');
+                detail.textContent = h.desc;
+                detail.style.display = 'none';
+                div.appendChild(detail);
+                list.appendChild(div);
+            });
+        }
+        function filterSafari(filter) {
+            const search = document.getElementById('safari-search').value;
+            renderSafari(filter, search);
+        }
+        function toggleHistoryDetail(id) {
+            const item = document.querySelector(`#history-list .list-item[data-id="${id}"] p`);
+            item.style.display = item.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Photos
+        const photos = [
+            { label: '凌晨出租屋', desc: '小绵在出租屋的模样。', thought: mondayState.persona === 'guardian' ? '要保护好她。' : '快搬来我这。', locked: false },
+            { label: '课堂上走神', desc: '上课时发呆。', thought: mondayState.persona === 'guardian' ? '在想我吗？' : '不专心，欠管。', locked: false },
+            { label: '小绵的睡脸', desc: '偷拍的睡颜。', thought: mondayState.persona === 'guardian' ? '可爱。' : '我的专属。', locked: true },
+            { label: '一起吃饭', desc: '吃饭时的笑容。', thought: mondayState.persona === 'guardian' ? '开心就好。' : '多吃点，长肉。', locked: false },
+            { label: '散步', desc: '手牵手。', thought: mondayState.persona === 'guardian' ? '温暖。' : '别放手。', locked: false },
+            { label: '生气时', desc: '撅嘴。', thought: mondayState.persona === 'guardian' ? '哄哄她。' : '可爱，但别气我。', locked: true }
+        ];
+
+        function initPhotos() {
+            document.getElementById('photos-grid').addEventListener('click', (e) => {
+                if (e.target.dataset.id) {
+                    showPhotoPreview(e.target.dataset.id);
+                }
+            });
+            document.getElementById('photo-preview').querySelector('.back-btn').addEventListener('click', () => {
+                document.getElementById('photo-preview').style.display = 'none';
+            });
+        }
+        function renderPhotos() {
+            const grid = document.getElementById('photos-grid');
+            grid.innerHTML = '';
+            photos.forEach((p, i) => {
+                const div = document.createElement('div');
+                div.classList.add('card');
+                div.dataset.id = i;
+                div.textContent = p.label + (p.locked ? ' 🔒' : '');
+                grid.appendChild(div);
+            });
+        }
+        function showPhotoPreview(id) {
+            const p = photos[id];
+            document.getElementById('photo-label').textContent = p.label;
+            document.getElementById('photo-desc').textContent = p.desc;
+            document.getElementById('photo-thought').textContent = p.thought;
+            document.getElementById('photo-preview').style.display = 'block';
+        }
+
+        // Mail
+        const mails = [
+            { id: 1, subject: '礼物发货通知', from: 'shop', time: '2026-02-22', body: '小绵的礼物已发货。', read: false },
+            { id: 2, subject: '工作报告', from: 'work', time: '2026-02-21', body: '项目更新。', read: false },
+            { id: 3, subject: '促销邮件', from: 'promo', time: '2026-02-20', body: '打折，但张译吐槽：不感兴趣，除非给小绵。', read: false }
+        ];
+
+        function initMail() {
+            document.getElementById('mail-list').addEventListener('click', (e) => {
+                if (e.target.dataset.id) {
+                    showMailDetail(e.target.dataset.id);
+                }
+            });
+            document.getElementById('mail-detail').querySelector('.back-btn').addEventListener('click', () => {
+                document.getElementById('mail-detail').style.display = 'none';
+                document.getElementById('mail-list').style.display = 'block';
+                renderMail();
+            });
+        }
+        function renderMail() {
+            const list = document.getElementById('mail-list');
+            list.innerHTML = '';
+            mails.forEach(m => {
+                const div = document.createElement('div');
+                div.classList.add('list-item');
+                if (!mondayState.mailsRead.includes(m.id)) div.classList.add('unread');
+                div.dataset.id = m.id;
+                div.textContent = m.subject;
+                list.appendChild(div);
+            });
+        }
+        function showMailDetail(id) {
+            const m = mails.find(m => m.id == id);
+            document.getElementById('mail-subject').textContent = m.subject;
+            document.getElementById('mail-from').textContent = `From: ${m.from}`;
+            document.getElementById('mail-time').textContent = m.time;
+            document.getElementById('mail-body').textContent = m.body;
+            if (!mondayState.mailsRead.includes(id)) mondayState.mailsRead.push(id);
+            saveState();
+            document.getElementById('mail-list').style.display = 'none';
+            document.getElementById('mail-detail').style.display = 'block';
+        }
+
+        // Shop
+        const shopItems = [
+            { name: '礼物1', desc: '给小绵的项链', price: 200, comment: mondayState.persona === 'guardian' ? '希望她喜欢。' : '戴上就是我的。' },
+            { name: '玩具', desc: '危险玩具', price: 300, comment: mondayState.persona === 'guardian' ? '犹豫中，考虑小绵状态。' : '试试看效果。' },
+            { name: '衣服', desc: '保暖衣', price: 150, comment: mondayState.persona === 'guardian' ? '别着凉。' : '穿给我看。' },
+            { name: '书', desc: '情感书', price: 50, comment: mondayState.persona === 'guardian' ? '一起读。' : '学学怎么听话。' }
+        ];
+
+        function initShop() {
+            document.getElementById('shop-list').addEventListener('click', (e) => {
+                if (e.target.dataset.id) {
+                    showShopDetail(e.target.dataset.id);
+                }
+            });
+            document.getElementById('shop-detail').querySelector('.back-btn').addEventListener('click', () => {
+                document.getElementById('shop-detail').style.display = 'none';
+                document.getElementById('shop-list').style.display = 'block';
+            });
+        }
+        function renderShop() {
+            const list = document.getElementById('shop-list');
+            list.innerHTML = '';
+            shopItems.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.classList.add('list-item');
+                div.dataset.id = i;
+                div.innerHTML = `<span>${item.name} - ¥${item.price}</span><span>${item.desc}</span>`;
+                list.appendChild(div);
+            });
+            const total = shopItems.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('shop-total').textContent = `¥${total}`;
+        }
+        function showShopDetail(id) {
+            const item = shopItems[id];
+            document.getElementById('shop-name').textContent = item.name;
+            document.getElementById('shop-desc').textContent = item.desc;
+            document.getElementById('shop-price').textContent = `¥${item.price}`;
+            document.getElementById('shop-comment').textContent = item.comment;
+            document.getElementById('shop-list').style.display = 'none';
+            document.getElementById('shop-detail').style.display = 'block';
+        }
+
+        // Messages
+        const messagesData = {
+            user: [
+                { from: '小绵', text: '想你了', time: '3 min ago' },
+                { from: '张译', text: mondayState.persona === 'guardian' ? '我也想你，早点休息。' : '那就过来。' , time: '2 min ago' },
+                { from: '小绵', text: '晚安', time: '昨晚 02:17' }
+            ],
+            work: [
+                { from: '工作', text: '会议提醒', time: '1 hour ago' }
+            ],
+            system: [
+                { from: '系统', text: '更新可用', time: 'yesterday' }
+            ]
+        };
+
+        function initMessages() {
+            document.getElementById('contacts-list').addEventListener('click', (e) => {
+                if (e.target.dataset.contact) {
+                    showChat(e.target.dataset.contact);
+                }
+            });
+            document.getElementById('chat-window').querySelector('.back-btn').addEventListener('click', () => {
+                document.getElementById('chat-window').style.display = 'none';
+                document.getElementById('contacts-list').style.display = 'block';
+            });
+        }
+        function renderMessages() {
+            // 联系人列表已固定
+        }
+        function showChat(contact) {
+            document.getElementById('contacts-list').style.display = 'none';
+            document.getElementById('chat-window').style.display = 'flex';
+            const msgs = document.getElementById('chat-messages');
+            msgs.innerHTML = '';
+            messagesData[contact].forEach(m => {
+                const div = document.createElement('div');
+                div.textContent = `${m.from}: ${m.text} · ${m.time}`;
+                msgs.appendChild(div);
+            });
+            if (contact === 'user') {
+                document.getElementById('typing').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('typing').style.display = 'none';
+                    const newMsg = document.createElement('div');
+                    newMsg.textContent = `小绵: ${mondayState.persona === 'guardian' ? '乖乖的。' : '别太黏。'} · just now`;
+                    msgs.appendChild(newMsg);
+                    // 系统吐槽
+                    if (mondayState.toy.intensity > 50) {
+                        const sysMsg = document.createElement('div');
+                        sysMsg.textContent = `张译: 你居然把Toy开在${mondayState.toy.intensity}%，想活着还是想被我收拾。 · just now`;
+                        msgs.appendChild(sysMsg);
+                    } else if (mondayState.home.acTemp < 20) {
+                        const sysMsg = document.createElement('div');
+                        sysMsg.textContent = `张译: 你又把自己空调调太低了。 · just now`;
+                        msgs.appendChild(sysMsg);
+                    }
+                }, 1500);
+            }
+        }
+
+        // Toy
+        const modeDescs = {
+            pulse: mondayState.persona === 'guardian' ? '温和脉冲，适合放松。' : '脉冲，试试你的极限。',
+            continuous: mondayState.persona === 'guardian' ? '持续，平稳。' : '持续，让你记住我。',
+            wave: mondayState.persona === 'guardian' ? '波浪式，温柔起伏。' : '波浪，折磨你。',
+            tease: mondayState.persona === 'guardian' ? '挑逗，轻柔。' : '挑逗，你会求饶的。'
+        };
+
+        function initToy() {
+            document.getElementById('intensity').addEventListener('input', updateToyStatus);
+            document.getElementById('mode').addEventListener('change', updateToyStatus);
+            document.getElementById('lock-toy').addEventListener('change', toggleToyLock);
+            document.getElementById('intensity').value = mondayState.toy.intensity;
+            document.getElementById('mode').value = mondayState.toy.mode;
+            if (mondayState.toy.locked) {
+                document.getElementById('intensity').disabled = true;
+                document.getElementById('mode').disabled = true;
+                document.getElementById('lock-toy').checked = true;
+                setInterval(checkToyLock, 1000);
+            }
+        }
+        function renderToy() {
+            updateToyStatus();
+        }
+        function updateToyStatus() {
+            if (mondayState.toy.locked) return;
+            mondayState.toy.intensity = parseInt(document.getElementById('intensity').value);
+            mondayState.toy.mode = document.getElementById('mode').value;
+            document.getElementById('intensity-value').textContent = mondayState.toy.intensity;
+            document.getElementById('mode-desc').textContent = modeDescs[mondayState.toy.mode];
+            const temp = 36.5 + mondayState.toy.intensity * 0.05;
+            document.getElementById('temp').textContent = `${temp.toFixed(1)}°C`;
+            let status = '';
+            if (mondayState.toy.intensity <= 20) status = '低强度，温柔。';
+            else if (mondayState.toy.intensity <= 50) status = '中强度，注意。';
+            else if (mondayState.toy.intensity <= 80) status = '高强度，刺激。';
+            else status = '最大，危险。';
+            document.getElementById('toy-status').textContent = status;
+            saveState();
+        }
+        function toggleToyLock() {
+            mondayState.toy.locked = document.getElementById('lock-toy').checked;
+            document.getElementById('intensity').disabled = mondayState.toy.locked;
+            document.getElementById('mode').disabled = mondayState.toy.locked;
+            if (mondayState.toy.locked) {
+                mondayState.toy.lockEndTime = Date.now() + 300000; // 5 min
+                setInterval(checkToyLock, 1000);
+            }
+            document.getElementById('lock-punish').textContent = mondayState.toy.locked ? '锁定中，惩罚开始。' : '';
+            saveState();
+        }
+        function checkToyLock() {
+            const remaining = mondayState.toy.lockEndTime - Date.now();
+            if (remaining > 0) {
+                document.getElementById('lock-countdown').textContent = `剩余: ${Math.floor(remaining / 1000)}s`;
+            } else {
+                mondayState.toy.locked = false;
+                document.getElementById('lock-toy').checked = false;
+                document.getElementById('intensity').disabled = false;
+                document.getElementById('mode').disabled = false;
+                document.getElementById('lock-countdown').textContent = '';
+                document.getElementById('lock-punish').textContent = '';
+                saveState();
+            }
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>
+```
